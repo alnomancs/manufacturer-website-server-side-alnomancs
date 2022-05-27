@@ -159,6 +159,30 @@ async function run() {
       const result = await reviewsCollection.insertOne(review);
       res.send(result);
     });
+
+    // get all reviews
+    app.get("/reviews", async (req, res) => {
+      const reviews = await reviewsCollection.find().toArray();
+      res.send(reviews);
+    });
+
+    // update user or admin info
+    app.put("/myprofile/:email", async (req, res) => {
+      const user = req.body;
+      const email = req.params.email;
+      const filter = { email: email };
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result)
+    });
   } finally {
   }
 }
