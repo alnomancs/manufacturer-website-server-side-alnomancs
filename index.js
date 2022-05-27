@@ -51,6 +51,16 @@ async function run() {
     const usersCollection = client.db("manufacturer").collection("users");
     const reviewsCollection = client.db("manufacturer").collection("reviews");
 
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded.email;
+      const requestAcc = await usersCollection.findOne({ email: requester });
+      if (requestAcc.role === "admin") {
+        next();
+      } else {
+        res.status(403).send({ message: "Forbidden access" });
+      }
+    };
+
     //make a user role  and give access token for login and other auth
     app.put("/user/:email", async (req, res) => {
       const user = req.body;
@@ -77,6 +87,13 @@ async function run() {
     app.get("/products", async (req, res) => {
       const products = await productsCollection.find().toArray();
       res.send(products);
+    });
+
+    //get all order for admin
+
+    app.get("/orders", async (req, res) => {
+      const orders = await orderCollection.find().toArray();
+      res.send(orders);
     });
 
     //get product details by id
@@ -181,7 +198,30 @@ async function run() {
         updateDoc,
         options
       );
-      res.send(result)
+      res.send(result);
+    });
+
+    // get all user
+    app.get("/users", async (req, res) => {
+      const users = await usersCollection.find().toArray();
+      res.send(users);
+    });
+
+    //make user role admin
+    app.put("/user/admin/:email", verifyJWT, verifyAdmin, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: { role: "admin" },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await usersCollection.findOne({ email: email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
     });
   } finally {
   }
