@@ -36,7 +36,7 @@ const verifyJWT = (req, res, next) => {
       return res.status(403).send({ message: "Forbidden access" });
     }
     req.decoded = decoded;
-    next(); // for got
+    next(); // for goto next method
   });
 };
 
@@ -99,7 +99,6 @@ async function run() {
     });
 
     //get all order for admin
-
     app.get("/orders", async (req, res) => {
       const orders = await orderCollection.find().toArray();
       res.send(orders);
@@ -142,19 +141,6 @@ async function run() {
 
       const updatedOrder = await orderCollection.updateOne(filter, updatedDoc);
       res.send(updatedOrder);
-
-      // const id = req.params.id;
-      // const payment = req.body;
-      // const filter = { _id: ObjectId(id) };
-      // const updateDoc = {
-      //   $set: {
-      //     paid: true,
-      //     transactionId: payment.transactionId,
-      //   },
-      // };
-      // const updateOrder = await orderCollection.updateOne(filter, updateDoc);
-
-      // res.send(updateDoc);
     });
 
     //get order
