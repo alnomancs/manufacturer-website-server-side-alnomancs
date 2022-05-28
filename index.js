@@ -30,7 +30,6 @@ const client = new MongoClient(uri, {
 const verifyJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
-    w;
     return res.status(401).send({ message: "unauthorize" });
   }
   const token = authHeader.split(" ")[1];
@@ -64,9 +63,8 @@ async function run() {
     //make a user role  and give access token for login and other auth
     app.put("/user/:email", async (req, res) => {
       const user = req.body;
-      console.log(user);
+
       const email = req.params.email;
-      console.log(email);
       const filter = { email: email };
       const options = { upsert: true };
       const updateDoc = {
@@ -107,9 +105,7 @@ async function run() {
     //insert order
     app.post("/order", async (req, res) => {
       const order = req.body;
-      console.log(order);
       const result = await orderCollection.insertOne(order);
-      console.log(result);
       res.send(result);
     });
 
@@ -131,9 +127,15 @@ async function run() {
     // delete order
     app.delete("/order/:orderId", verifyJWT, async (req, res) => {
       const orderId = req.params.orderId;
-      console.log(orderId);
       const filter = { _id: ObjectID(orderId) };
       const result = await orderCollection.deleteOne(filter);
+      res.send(result);
+    });
+
+    //insert product
+    app.post("/product", verifyJWT, verifyAdmin, async (req, res) => {
+      const product = req.body;
+      const result = await productsCollection.insertOne(product);
       res.send(result);
     });
 
@@ -150,15 +152,19 @@ async function run() {
       const product = await orderCollection.findOne(query);
       res.send(product);
     });
-    //payment
 
+    // delete product
+    app.delete("/product/:productId", verifyJWT, async (req, res) => {
+      const productId = req.params.productId;
+      const filter = { _id: ObjectID(productId) };
+      const result = await productsCollection.deleteOne(filter);
+      res.send(result);
+    });
+
+    //payment
     app.post("/create-payment-intent", async (req, res) => {
       const { totalAmount } = req.body;
-
       const amount = totalAmount * 100;
-
-      console.log(totalAmount, amount);
-      //Create a PaymentIntent with the order amount and currency
       const paymentIntent = await stripe.paymentIntents.create({
         amount: calculateOrderAmount(amount),
         currency: "usd",
